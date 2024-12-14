@@ -2,10 +2,46 @@ defmodule Day05 do
   def part_one do
     {rules, pages} = get_input()
 
+    rules_map =
+      rules
+      |> Enum.group_by(&elem(&1, 1))
+
     pages
-    |> Enum.filter(&page_valid?(&1, rules))
+    |> Enum.filter(&page_valid?(&1, rules_map))
     |> Enum.map(&get_middle_page_number/1)
     |> Enum.sum()
+  end
+
+  def part_two do
+    {rules, pages} = get_input()
+
+    rules_map =
+      rules
+      |> Enum.group_by(&elem(&1, 1))
+
+    pages
+    |> Enum.map(fn page ->
+      if page_valid?(page, rules_map) do
+        0
+      else
+        page
+        |> rule_sort(rules)
+        |> get_middle_page_number()
+      end
+    end)
+    |> Enum.sum()
+  end
+
+  defp rule_sort(page_elements, all_rules) do
+    Enum.sort(page_elements, &compare_by_rules(&1, &2, all_rules))
+  end
+
+  defp compare_by_rules(a, b, rules) do
+    cond do
+      Enum.member?(rules, {a, b}) -> true
+      Enum.member?(rules, {b, a}) -> false
+      true -> a < b
+    end
   end
 
   defp get_middle_page_number(page) do
@@ -40,7 +76,6 @@ defmodule Day05 do
         |> Enum.map(&String.to_integer/1)
         |> List.to_tuple()
       end)
-      |> Enum.group_by(&elem(&1, 1))
 
     pages =
       String.split(pages_input, "\n", trim: true)
